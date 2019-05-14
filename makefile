@@ -2,34 +2,53 @@
 
 TITLE = vnsrpg
 
-OBJLIST = nrom hello_world
+ASMLIST = nrom hello_world
+INCLIST = nes
+MAPCFG = nrom128.cfg
+MAPOUT = map.txt
 
 CA65 = ca65
 LD65 = ld65
-OBJDIR = obj
 SRCDIR = src
+OBJDIR = build
 
 EMU := mesen
 DEBUGEMU := mesen
 
-.DEFAULT_GOAL := run
+.DEFAULT_GOAL := all
 
-.PHONY: run all clean
+.PHONY: run all clean clean-all
 
-run: $(TITLE).nes
+ROMFILE = $(TITLE).nes
+
+run: $(ROMFILE) directories
 	$(EMU) $< &
 
-all: $(TITLE).nes
+all: directories $(ROMFILE)
 
 clean:
 	-rm $(OBJDIR)/*.o
+	-rmdir $(OBJDIR)
+
+clean-all: clean
+	-rm $(MAPOUT) $(ROMFILE)
+
+# build env
+
+directories: $(OBJDIR)
+
+$(OBJDIR):
+	mkdir $(OBJDIR)
 
 # build PRG
 
-OBJLISTFILES = $(foreach o,$(OBJLIST),$(OBJDIR)/$(o).o)
+OBJLISTFILES = $(foreach o,$(ASMLIST) $(INCLIST),$(OBJDIR)/$(o).o)
 
-$(TITLE).nes map.txt: nrom128.cfg $(OBJLISTFILES)
-	$(LD65) -o $(TITLE).nes -m map.txt -C $^
+$(ROMFILE) $(MAPOUT): $(MAPCFG) $(OBJLISTFILES)
+	$(LD65) -o $(ROMFILE) -m $(MAPOUT) -C $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
+	$(CA65) $< -o $@
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.inc
 	$(CA65) $< -o $@
