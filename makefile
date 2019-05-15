@@ -2,8 +2,8 @@
 
 TITLE = vnsrpg
 
-ASMLIST = nrom hello_world chr0
-INCLIST = nes
+ASMLIST = nrom hello_world chr0 interrupt_vectors
+INCLIST = nes mmc3
 MAPCFG = nrom128.cfg
 MAPOUT = map.txt
 

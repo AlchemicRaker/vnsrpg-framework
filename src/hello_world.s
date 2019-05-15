@@ -1,5 +1,7 @@
 .include "nes.inc"
 
+.export reset_handler, nmi_handler, reset_handler, irq_handler
+
 .segment "ZEROPAGE"
 
 frame_counter: .res 1
@@ -128,12 +130,3 @@ set_scroll:
 .proc irq_handler
     rti
 .endproc
-
-.segment "NMIVECTOR"
-.addr nmi_handler
-
-.segment "RESETVECTOR"
-.addr reset_handler
-
-.segment "IRQVECTOR"
-.addr irq_handler
