@@ -2,7 +2,7 @@
 
 TITLE = vnsrpg
 
-ASMLIST = nrom hello_world
+ASMLIST = nrom hello_world chr0
 INCLIST = nes
 MAPCFG = nrom128.cfg
 MAPOUT = map.txt
