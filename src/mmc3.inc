@@ -14,26 +14,36 @@ MMC3_PRG_RAM = $6000
 MMC3_PRG0 = $8000
 MMC3_PRG1 = $A000
 
-.import bank_jump_launchpoint, bank_jump_bank, bank_jump_target
-
 .macro fjmp target
-    lda #<.bank(target)
-    sta MMC3SELECT
-    lda #>.bank(target)
-    sta MMC3DATA
+    ldst #<.bank(target), MMC3SELECT
+    ldst #>.bank(target), MMC3DATA
     jmp target
 .endmacro
 
 .macro bjmp target
-    lda #<.bank(target)
-    sta bank_jump_bank
-    lda #>.bank(target)
-    sta bank_jump_bank+1
-    lda #<target
-    sta bank_jump_target
-    lda #>target
-    sta bank_jump_target+1
+    ldst #<.bank(target), bank_jump_bank
+    ldst #>.bank(target), bank_jump_bank+1
+    ldst #<target, bank_jump_target
+    ldst #>target, bank_jump_target+1
     jmp bank_jump_launchpoint
+.endmacro
+
+.macro fjsr target
+    ; ldst #<.bank(target), bank_jump_bank
+    ldst #>.bank(target), bank_jump_bank+1
+    ldst #<target, bank_jump_target
+    ldst #>target, bank_jump_target+1
+
+    lda #<.bank(target)
+    cmp #$06
+    bne
+branch_prg0:
+    jsr bank_call_launchpoint_prg0
+    jmp finally
+branch_prg1:
+    jsr bank_call_launchpoint_prg1
+finally:
+    rts
 .endmacro
 
 .endif

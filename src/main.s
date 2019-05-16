@@ -2,11 +2,20 @@
 .include "mmc3.inc"
 
 .export main, nmi_handler, irq_handler
-.import sample_ppu
+.import sample_ppu, bank_jump_bank, bank_jump_target, bank_call_launchpoint_prg0
 
 .segment "ZEROPAGE"
 
 frame_counter: .res 1
+
+.segment "INITBANK"
+
+.proc foobar
+    lda #$FF
+    lda #$FE
+    lda #$FD
+    rts
+.endproc
 
 .segment "STATICCODE"
 .proc main
@@ -18,6 +27,8 @@ set_0_0_scroll:
     lda #$00
     sta PPUADDR
     sta PPUADDR
+
+    fjsr foobar
 
 main_loop:
     jmp main_loop

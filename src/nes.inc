@@ -57,4 +57,12 @@ KEY_DOWN   = %00000100
 KEY_LEFT   = %00000010
 KEY_RIGHT  = %00000001
 
+.macro ldst load_ref, store_ref, store_ref2
+    lda load_ref
+    sta store_ref
+.ifnblank store_ref2
+    sta store_ref2
+.endif
+.endmacro
+
 .endif
