@@ -1,5 +1,5 @@
 ; iNES header
-.segment "NROM"
+.segment "TXROM"
 
 INES_MAPPER = 4
 INES_MIRROR = 0 ; 0 = horizontal mirroring, 1 = vertical mirroring

@@ -1,7 +1,7 @@
 .include "nes.inc"
 .include "mmc3.inc"
 
-.export bank_jump_launchpoint, bank_jump_bank, bank_jump_target, bank_prg0_select, bank_prg1_select, bank_call_launchpoint_prg0
+.export bank_jump_launchpoint, bank_jump_bank, bank_jump_target, bank_prg0_select, bank_prg1_select, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
 
 .segment "RAM"
 bank_jump_bank: .res 2
@@ -18,11 +18,11 @@ bank_prg1_select: .res 1
 .endproc
 
 bank_call_launchpoint_table:
-.repeat 6
-    .word $0000
-.endrepeat
-    .addr bank_call_launchpoint_prg0
-    .addr bank_call_launchpoint_prg1
+; .repeat 6
+;     .word $0000
+; .endrepeat
+;     .addr bank_call_launchpoint_prg0
+;     .addr bank_call_launchpoint_prg1
 
 .proc bank_call_launchpoint_prg0
     ; store the current bank on the stack

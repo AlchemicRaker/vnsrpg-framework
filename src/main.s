@@ -2,13 +2,13 @@
 .include "mmc3.inc"
 
 .export main, nmi_handler, irq_handler
-.import sample_ppu, bank_jump_bank, bank_jump_target, bank_call_launchpoint_prg0
+.import sample_ppu, bank_jump_bank, bank_jump_target, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
 
 .segment "ZEROPAGE"
 
 frame_counter: .res 1
 
-.segment "INITBANK"
+.segment "INITBANK2"
 
 .proc foobar
     lda #$FF

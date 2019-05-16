@@ -2,9 +2,9 @@
 
 TITLE = vnsrpg
 
-ASMLIST = nrom main chr0 interrupts init sample_ppu banks
+ASMLIST = txrom main chr0 interrupts init sample_ppu banks
 INCLIST = nes mmc3
-MAPCFG = nrom128.cfg
+MAPCFG = txrom.cfg
 MAPOUT = map.txt
 
 CA65 = ca65
@@ -20,18 +20,22 @@ DEBUGEMU := mesen
 .PHONY: run all clean clean-all
 
 ROMFILE = $(TITLE).nes
+DBGFILE = $(TITLE).dbg
 
-run: $(ROMFILE) directories
+run: $(ROMFILE) $(DBGFILE) directories
 	$(EMU) $< &
 
-all: directories $(ROMFILE)
+debug: $(ROMFILE) $(DBGFILE) directories
+	$(EMU) $< &
+
+all: directories $(DBGFILE) $(ROMFILE)
 
 clean:
 	-rm $(OBJDIR)/*.o
 	-rmdir $(OBJDIR)
 
 clean-all: clean
-	-rm $(MAPOUT) $(ROMFILE)
+	-rm $(MAPOUT) $(ROMFILE) $(DBGFILE)
 
 # build env
 
@@ -44,11 +48,11 @@ $(OBJDIR):
 
 OBJLISTFILES = $(foreach o,$(ASMLIST) $(INCLIST),$(OBJDIR)/$(o).o)
 
-$(ROMFILE) $(MAPOUT): $(MAPCFG) $(OBJLISTFILES)
-	$(LD65) -o $(ROMFILE) -m $(MAPOUT) -C $^
+$(DBGFILE) $(ROMFILE) $(MAPOUT): $(MAPCFG) $(OBJLISTFILES)
+	$(LD65) -o $(ROMFILE) -m $(MAPOUT) --dbgfile $(DBGFILE) -C $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.s
-	$(CA65) $< -o $@
+	$(CA65) $< -g -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.inc
-	$(CA65) $< -o $@
+	$(CA65) $< -g -o $@

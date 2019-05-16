@@ -36,14 +36,13 @@ MMC3_PRG1 = $A000
 
     lda #<.bank(target)
     cmp #$06
-    bne
+    bne branch_prg1
 branch_prg0:
     jsr bank_call_launchpoint_prg0
     jmp finally
 branch_prg1:
     jsr bank_call_launchpoint_prg1
 finally:
-    rts
 .endmacro
 
 .endif
