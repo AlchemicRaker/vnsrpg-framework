@@ -2,5 +2,5 @@
 
 inotifywait -q -m -e close_write *.cfg src/*.s src/*.inc |
 while read -r filename event; do
-	make run
+	make $1
 done

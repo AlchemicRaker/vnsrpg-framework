@@ -1,4 +1,4 @@
-.segment "CHRRAW"
+.segment "CHR0"
 
 ;16 byte defines 1 tile
 ;8 byte are the first bit of each color in an 8x8 grid

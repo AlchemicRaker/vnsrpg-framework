@@ -2,7 +2,7 @@
 
 TITLE = vnsrpg
 
-ASMLIST = nrom hello_world chr0 interrupt_vectors
+ASMLIST = nrom main chr0 interrupts init sample_ppu banks
 INCLIST = nes mmc3
 MAPCFG = nrom128.cfg
 MAPOUT = map.txt
