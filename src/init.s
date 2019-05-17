@@ -18,6 +18,7 @@ init_clear_ppu_state:
     ldx #$00
     stx PPUCTRL     ; Disable NMI and VRAM increment to 32??
     stx PPUMASK     ; Disable rendering
+    stx IRQ_DISABLE ; Disable MMC3 IRQ
 init_dmc_state:
     stx $4010       ; Disable DMC IRQ
 init_stack:
@@ -45,12 +46,6 @@ init_clear_ram:
 vwait2:
     bit PPUSTATUS
     bpl vwait2
-    
-    lda #VBLANK_NMI
-    sta PPUCTRL
-
-    lda #BG_ON
-    sta PPUMASK
 
     jmp main
 

@@ -14,6 +14,12 @@ MMC3_PRG_RAM = $6000
 MMC3_PRG0 = $8000
 MMC3_PRG1 = $A000
 
+IRQ_LATCH = $C000   ; schedule a scanline
+IRQ_RELOAD = $C001  ; force irq on next scanline
+IRQ_DISABLE = $E000 ; disable & acknowledge
+IRQ_ENABLE = $E001  ; enable
+
+
 .macro fjmp target
     ldst #<.bank(target), MMC3SELECT
     ldst #>.bank(target), MMC3DATA
@@ -36,13 +42,13 @@ MMC3_PRG1 = $A000
 
     lda #<.bank(target)
     cmp #$06
-    bne branch_prg1
-branch_prg0:
+    bne @branch_prg1
+@branch_prg0:
     jsr bank_call_launchpoint_prg0
-    jmp finally
-branch_prg1:
+    jmp @finally
+@branch_prg1:
     jsr bank_call_launchpoint_prg1
-finally:
+@finally:
 .endmacro
 
 .endif

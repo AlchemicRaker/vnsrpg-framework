@@ -4,6 +4,9 @@
 .import set_0_0_scroll
 .export sample_ppu
 
+.segment "ZEROPAGE"
+; tile_iterator: .res 1
+
 .segment "INITBANK"
 .proc sample_ppu
 init_start_ppu:
@@ -11,8 +14,9 @@ init_start_ppu:
 
     ; lda #$25        
     ; sta frame_counter
+    jmp put_sample_tiles_on_screen
 
-put_sample_tiles_on_screen:
+put_sample_tiles_on_screen_old:
     bit PPUSTATUS
     lda #$20        ; point at beginning of nametable
     sta PPUADDR
@@ -34,6 +38,32 @@ put_sample_tiles_on_screen:
     lda #$03        ; tile number
     sta PPUDATA     ; nametable 1
 
+put_sample_tiles_on_screen:
+    bit PPUSTATUS
+    lda #$20        ; point at beginning of nametable
+    sta PPUADDR
+    lda #$00
+    sta PPUADDR
+
+    clc
+    ldy #$00        ; y
+@loop_row:
+    ldx #$00        ; x
+    tya             ; tile to display, offset it each row
+
+@loop_column:
+    and #$03        ; clamp tile
+    sta PPUDATA     ; output tile
+
+    adc #$01        ; next tile
+    inx             ; next column
+    cpx #$20
+    bne @loop_column
+
+    iny             ;next row
+    cpy #$1E
+    bne @loop_row
+
 set_sample_palette:
     lda #$3F
     sta PPUADDR
@@ -48,5 +78,5 @@ set_sample_palette:
     lda #$1a
     sta PPUDATA
 
-    jmp set_0_0_scroll ; TODO: return from far call
+    rts
 .endproc
