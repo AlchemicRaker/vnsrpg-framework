@@ -1,8 +1,10 @@
-.include "nes.inc"
-.include "mmc3.inc"
+; .include "nes.inc"
+; .include "mmc3.inc"
+.include "global.inc"
 
 .export main, nmi_handler, irq_handler
-.import sample_ppu, bank_jump_bank, bank_jump_target, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
+.import sample_ppu
+; bank_jump_bank, bank_jump_target, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
 
 .segment "ZEROPAGE"
 
@@ -29,7 +31,7 @@ dummy: .res 2
     fjsr sample_ppu
     
 set_0_0_scroll:
-    lda #VBLANK_NMI | OBJ_1000
+    lda #PPUCTRL_NMI | PPUCTRL_OBJ_1000
     sta PPUCTRL
 
     lda #BG_ON
@@ -82,7 +84,7 @@ main_loop:
 
 .proc irq_handler
 ;burn until a specific column is passed
-.repeat 96
+.repeat 96 ;92 for 2 palettes, 
     nop
 .endrepeat
     
@@ -98,12 +100,14 @@ main_loop:
     lda #$00
     sta PPUMASK
 
-    lda #$03
+    lda #$02
 
     ; critical update time
 
     sta PPUADDR
     stx PPUDATA
+    ; ldx #$24      ;try to jam a second one in?
+    ; stx PPUDATA   ;taste the rainbow!
     sty PPUADDR
     lda #$00 ; ppuaddr restore 2
     sta PPUADDR

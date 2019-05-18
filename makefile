@@ -3,7 +3,7 @@
 TITLE = vnsrpg
 
 ASMLIST = txrom main chr0 interrupts init sample_ppu banks
-INCLIST = nes mmc3
+INCLIST = global
 MAPCFG = txrom.cfg
 MAPOUT = map.txt
 
@@ -22,11 +22,11 @@ DEBUGEMU := mesen
 ROMFILE = $(TITLE).nes
 DBGFILE = $(TITLE).dbg
 
-run: $(ROMFILE) $(DBGFILE) directories
-	$(EMU) $< &
+run: directories $(ROMFILE) $(DBGFILE)
+	$(EMU) $(ROMFILE) &
 
-debug: $(ROMFILE) $(DBGFILE) directories
-	$(EMU) $< &
+debug: directories $(ROMFILE) $(DBGFILE)
+	$(EMU) $(ROMFILE) &
 
 all: directories $(DBGFILE) $(ROMFILE)
 
@@ -46,12 +46,14 @@ $(OBJDIR):
 
 # build PRG
 
+OBJLISTHEADERFILES = $(foreach o,$(INCLIST),$(OBJDIR)/$(o).o)
+
 OBJLISTFILES = $(foreach o,$(ASMLIST) $(INCLIST),$(OBJDIR)/$(o).o)
 
 $(DBGFILE) $(ROMFILE) $(MAPOUT): $(MAPCFG) $(OBJLISTFILES)
 	$(LD65) -o $(ROMFILE) -m $(MAPOUT) --dbgfile $(DBGFILE) -C $^
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.s
+$(OBJDIR)/%.o: $(SRCDIR)/%.s $(OBJLISTHEADERFILES)
 	$(CA65) $< -g -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.inc

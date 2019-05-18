@@ -1,5 +1,6 @@
-.include "nes.inc"
-.include "mmc3.inc"
+; .include "nes.inc"
+; .include "mmc3.inc"
+.include "global.inc"
 
 .export mmc3_init
 .import main
@@ -26,12 +27,12 @@ init_stack:
     txs             ; stack pointer = $01FF
 
     bit PPUSTATUS   ; Acknowledge stray vblank NMI across reset_handler
-    bit SNDCHN      ; Acknowledge DMC IRQ
+    bit $4015       ; Acknowledge DMC IRQ
 init_apu:
     lda #$40
-    sta P2          ; Disable APU Frame IRQ
+    sta $4017       ; Disable APU Frame IRQ
     lda #$0F
-    sta SNDCHN      ; Disable DMC playback, initialize other channels
+    sta $4015       ; Disable DMC playback, initialize other channels
 
 vwait1:
     bit PPUSTATUS

@@ -1,7 +1,8 @@
-.include "nes.inc"
-.include "mmc3.inc"
+; .include "nes.inc"
+; .include "mmc3.inc"
+.include "global.inc"
 
-.export bank_jump_launchpoint, bank_jump_bank, bank_jump_target, bank_prg0_select, bank_prg1_select, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
+; .export bank_jump_launchpoint, bank_jump_bank, bank_jump_target, bank_prg0_select, bank_prg1_select, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
 
 .segment "RAM"
 bank_jump_bank: .res 2

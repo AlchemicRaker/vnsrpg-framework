@@ -1,5 +1,6 @@
-.include "nes.inc"
-.include "mmc3.inc"
+; .include "nes.inc"
+; .include "mmc3.inc"
+.include "global.inc"
 
 .import set_0_0_scroll
 .export sample_ppu
