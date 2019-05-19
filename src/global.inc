@@ -81,19 +81,13 @@ INPUT_RIGHT  = %00000001
 .endif
 .endmacro
 
-; .macro ldppuaddr load_value, load_value2
-; .ifnblank load_value2
-;     lda load_value
-;     sta PPUADDR
-;     lda load_value2
-;     sta PPUADDR
-; .else
-;     lda #>load_value
-;     sta PPUADDR
-;     lda #<load_value
-;     sta PPUADDR
-; .endif
-; .endmacro
+.macro ldyppuaddr1 full_x, full_y, nt
+    ldy #(((full_y & %00000111) << 4) | (nt << 2) | ((full_y & %11000000) >> 6))
+.endmacro
+
+.macro ldyppuaddr2 full_x, full_y, nt
+    ldy #(((full_y & %00111000) << 2) | (full_x >> 3))
+.endmacro
 
 
 ; BANK macros

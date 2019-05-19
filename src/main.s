@@ -37,7 +37,7 @@ main_loop:
 
 .proc nmi_handler ; vblank
     sta IRQ_DISABLE
-    lda #$40      ; scanline 68 (halfway through row 9)
+    lda #$3F      ; scanline 68 (halfway through row 9)
     sta IRQ_LATCH
     sta IRQ_RELOAD
     sta IRQ_ENABLE
@@ -63,6 +63,13 @@ main_loop:
     rti
 .endproc
 
+;so, update 1 palette color per row
+;rest of the row can render
+;however, the scroll cannot be restored to the bottom half of a row of tiles
+;a separate bank with offset UI tiles can be used to draw the bottom half of the row
+;bank switch *before* the hblank it becomes necessary
+;back switch back before the next row of tiles, somehow.
+
 .proc irq_handler
 ;burn until a specific column is passed
 .repeat 96 ;92 for 2 palettes, 
@@ -73,11 +80,12 @@ main_loop:
     bit PPUSTATUS
 
     ldx #$20 ; new palette color
-    ldy #$11 ; ppuaddr restore 1
+
+    ldyppuaddr1 $00, $40, $0 ; prep restore 1
 
     ldst #$3F, PPUADDR ; write 1
 
-    ldst #$00, PPUMASK
+    ldst #$00, PPUMASK ; disable rendering
 
     lda #$02 ; palette color index
 
@@ -87,9 +95,9 @@ main_loop:
     stx PPUDATA
     ; ldx #$24      ;try to jam a second one in?
     ; stx PPUDATA   ;taste the rainbow!
-    sty PPUADDR
-    lda #$00        ; ppuaddr restore 2
-    sta PPUADDR
+    sty PPUADDR     ; restore 1
+    ldyppuaddr2 $00, $40, $0
+    sty PPUADDR     ; restore 2
     ; critical time done
 
     lda #BG_ON
