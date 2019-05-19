@@ -26,7 +26,7 @@ bank_prg1_select: .res 1
     mjsr (bank_jump_target)
 
 resolve:
-    ldst #$06, MMC3SELECT
+    ; ldst #$06, MMC3SELECT
     ; pop the previous bank from the stack
     ; put it into RAM and MMC3DATA
     plst bank_prg0_select, MMC3DATA
@@ -46,7 +46,7 @@ resolve:
     mjsr (bank_jump_target)
 
 resolve:
-    ldst #$07, MMC3SELECT
+    ; ldst #$07, MMC3SELECT
     ; pop the previous bank from the stack
     ; put it into RAM and MMC3DATA
     plst bank_prg1_select, MMC3DATA

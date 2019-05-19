@@ -7,6 +7,7 @@
 .global bank_jump_launchpoint, bank_jump_bank, bank_jump_target
 .global bank_prg0_select, bank_prg1_select
 .global bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
+.global next_scene_bank, next_scene_point
 
 
 MMC3SELECT = $8002
@@ -89,30 +90,40 @@ INPUT_RIGHT  = %00000001
     ldy #(((full_y & %00111000) << 2) | (full_x >> 3))
 .endmacro
 
+.macro ldstword addr, target, target2
+    ldst #<addr, target
+.ifblank target2
+    ldst #>addr, target+1
+.else
+    ldst #>addr, target2
+.endif
+.endmacro
 
 ; BANK macros
 
 .macro fjmp target
-    ldst #<.bank(target), MMC3SELECT
-    ldst #>.bank(target), MMC3DATA
+    ldstword .bank(target), MMC3SELECT, MMC3DATA
     jmp target
 .endmacro
 
 .macro bjmp target
-    ldst #<.bank(target), bank_jump_bank
-    ldst #>.bank(target), bank_jump_bank+1
-    ldst #<target, bank_jump_target
-    ldst #>target, bank_jump_target+1
+    ldstword .bank(target), bank_jump_bank
+    ldstword target, bank_jump_target
     jmp bank_jump_launchpoint
 .endmacro
 
-.macro fjsr target
+.macro fjsr target, target_bank
 .scope
+.ifblank target_bank
     ldst #>.bank(target), bank_jump_bank+1
-    ldst #<target, bank_jump_target
-    ldst #>target, bank_jump_target+1
-
+    ldstword target, bank_jump_target
     lda #<.bank(target)
+.else
+    ldst target_bank+1, bank_jump_bank+1
+    ldstword target, bank_jump_target
+    lda target_bank
+.endif
+
     cmp #$06
     bne @branch_prg1
 @branch_prg0:

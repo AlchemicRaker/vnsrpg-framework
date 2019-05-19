@@ -2,7 +2,7 @@
 
 TITLE = vnsrpg
 
-ASMLIST = txrom main chr0 interrupts init sample_ppu banks
+ASMLIST = txrom main chr0 interrupts init sample_ppu banks demo
 INCLIST = global
 MAPCFG = txrom.cfg
 MAPOUT = map.txt

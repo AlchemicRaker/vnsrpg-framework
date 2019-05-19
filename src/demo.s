@@ -1,16 +1,13 @@
-; .include "nes.inc"
-; .include "mmc3.inc"
 .include "global.inc"
 
-.import set_0_0_scroll, demo_scene_load_point
-.export sample_ppu
+.export demo_scene_load_point
 
-.segment "ZEROPAGE"
-; tile_iterator: .res 1
 
 .segment "INITBANK"
-.proc sample_ppu
-init_start_ppu:
+; Load should happen during a vblank
+demo_scene_load_point:
+    ; disable NMI while loading
+
     bit PPUSTATUS
     
     ldst #>NT_2000, PPUADDR ; point at beginning of nametable
@@ -49,8 +46,19 @@ set_sample_palette:
     lda #$1a
     sta PPUDATA
 
-    ; ldstword .bank(demo_scene_load_point), next_scene_bank
-    ; ldstword demo_scene_load_point, next_scene_point
+    ; enable NMI
+    ldst #PPUCTRL_NMI | PPUCTRL_OBJ_1000, PPUCTRL
+
+    ldst #BG_ON, PPUMASK
+
+    ldst #>$0000, PPUSCROLL
+    ldst #<$0000, PPUSCROLL
+
+    ldstword .bank(demo_scene_main_point), next_scene_bank
+    ldstword demo_scene_main_point, next_scene_point
 
     rts
-.endproc
+
+.segment "INITBANK2"
+demo_scene_main_point:
+    rts
