@@ -81,19 +81,19 @@ INPUT_RIGHT  = %00000001
 .endif
 .endmacro
 
-.macro ldppuaddr load_value, load_value2
-.ifnblank load_value2
-    lda load_value
-    sta PPUADDR
-    lda load_value2
-    sta PPUADDR
-.else
-    lda #>load_value
-    sta PPUADDR
-    lda #<load_value
-    sta PPUADDR
-.endif
-.endmacro
+; .macro ldppuaddr load_value, load_value2
+; .ifnblank load_value2
+;     lda load_value
+;     sta PPUADDR
+;     lda load_value2
+;     sta PPUADDR
+; .else
+;     lda #>load_value
+;     sta PPUADDR
+;     lda #<load_value
+;     sta PPUADDR
+; .endif
+; .endmacro
 
 
 ; BANK macros

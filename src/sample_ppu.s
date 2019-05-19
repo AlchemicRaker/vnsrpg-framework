@@ -12,11 +12,9 @@
 .proc sample_ppu
 init_start_ppu:
     bit PPUSTATUS
-    ; lda #$20        ; point at beginning of nametable
-    ; sta PPUADDR
-    ; lda #$00
-    ; sta PPUADDR
-    ldppuaddr NT_2000
+    
+    ldst #>NT_2000, PPUADDR ; point at beginning of nametable
+    ldst #<NT_2000, PPUADDR ; point at beginning of nametable
 
     clc
     ldy #$00        ; y
