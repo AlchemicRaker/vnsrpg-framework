@@ -1,10 +1,7 @@
-; .include "nes.inc"
-; .include "mmc3.inc"
 .include "global.inc"
 
 .export main, nmi_handler, irq_handler
 .import sample_ppu
-; bank_jump_bank, bank_jump_target, bank_call_launchpoint_prg0, bank_call_launchpoint_prg1
 
 .segment "ZEROPAGE"
 
@@ -14,35 +11,21 @@ frame_counter: .res 1
 dummy: .res 2
 
 .segment "INITBANK2"
-
-.proc foobar
-    lda #$FF
-    lda #$FE
-    lda #$FD
-    rts
+.proc bank_switch_far_call_test
+    rts 
 .endproc
 
 .segment "STATICCODE"
 .proc main
-.export set_0_0_scroll
-
-
-
     fjsr sample_ppu
-    
+    ldst #PPUCTRL_NMI | PPUCTRL_OBJ_1000, PPUCTRL
+
+    ldst #BG_ON, PPUMASK
+
 set_0_0_scroll:
-    lda #PPUCTRL_NMI | PPUCTRL_OBJ_1000
-    sta PPUCTRL
+    ldppuaddr $0000
 
-    lda #BG_ON
-    sta PPUMASK
-
-    lda #$00
-    sta PPUADDR
-    sta PPUADDR
-
-
-    fjsr foobar
+    fjsr bank_switch_far_call_test
 
     cli
 
