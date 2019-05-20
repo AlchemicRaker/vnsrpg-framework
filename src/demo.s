@@ -3,7 +3,7 @@
 .export demo_scene_load_point, demo_scene_irq
 .import scene_irq, scene_nmi
 
-.import irq_next_index, irq_next_scanline, irq_table_address, irq_rts
+.import irq_next_index, irq_next_scanline, irq_rts, irq_table_address
 .importzp irq_table_scanline
 
 
@@ -110,7 +110,7 @@ demo_scene_main_point:
 ;     jmp foo2
 ;     jmp foo1
 ; foo2:
-.repeat 74
+.repeat 72
     nop
 .endrepeat
     bit PPUSTATUS

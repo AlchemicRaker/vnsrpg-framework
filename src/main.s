@@ -2,7 +2,7 @@
 
 .export main, nmi_handler, irq_handler, next_scene_bank, next_scene_point, scene_nmi, scene_irq
 .import sample_ppu, demo_scene_load_point, demo_scene_irq
-.export irq_table_address, irq_next_index, irq_next_scanline
+.export irq_next_index, irq_next_scanline, irq_table_address
 .exportzp irq_table_scanline
 
 .segment "ZEROPAGE"
@@ -12,6 +12,7 @@ irq_next_address: .res 2
 irq_table_scanline: .res 8 ; works with irq_table_address; with with an $FF
 
 .segment "RAM"
+irq_table_address: .res 16 ; 8 addresses
 next_scene_bank: .res 2
 next_scene_point: .res 2
 post_nmi_flag: .res 1
@@ -27,7 +28,6 @@ scene_irq: .res 2
 irq_next_index: .res 1 ; index of the table coming up/currently
 irq_next_scanline: .res 1 ; track the coming up/current scanline
 
-irq_table_address: .res 16 ; 8 addresses
 
 irq_save_a: .res 1
 irq_save_x: .res 1
@@ -107,7 +107,7 @@ load_first_irq:
     sta IRQ_RELOAD
     sta IRQ_ENABLE
 
-    sta irq_next_scanline ; first scanline's value is the next scanline
+    ; sta irq_next_scanline ; first scanline's value is the next scanline
 
     ; set the latch for the next hblank
     ; lda irq_table_scanline+1 
@@ -140,32 +140,17 @@ load_first_irq:
     ; set the next IRQ_LATCH now
     ldx irq_next_index
     inx
+    stx irq_next_index
+
     lda irq_table_scanline,X
     sta IRQ_LATCH
     sta IRQ_RELOAD
     sta IRQ_ENABLE
 
-
-
     jmp (irq_next_address)
-    ; this target nees to rti on its own
-    rti
 
-    ; advance the index, load the next scanline
-    ; if the scanline isn't $FF, prepare for another handler, otherwise disable IRQ
-    lda irq_next_scanline
-    ldx irq_next_index
-    inx
-    clc
-    adc irq_table_scanline,X
-    bcs irq_handler_end
-
-    ; store the new values
-    sta irq_next_scanline
-    stx irq_next_index 
-
-    ; irq_next_address = irq_table_address[irq_next_index*2]
-    txa
+irq_rts:
+    lda irq_next_index
     asl A
     tax
     lda irq_table_address,X
@@ -173,97 +158,9 @@ load_first_irq:
     lda irq_table_address+1,X
     sta irq_next_address+1
 
-irq_rts:
 irq_handler_end:
     lda irq_save_a
     ldx irq_save_x
     ldy irq_save_y
     rti
 .endproc
-
-
-
-
-.proc irq_handlerj
-.import irq_rts
-;burn until a specific column is passed
-.repeat 93 ;92 for 2 palettes, 
-    nop
-.endrepeat
-    
-    ; prep registers and writes
-    bit PPUSTATUS
-
-    ldx #$20 ; new palette color
-    ldy #$11 ; ppuaddr restore 1
-
-    lda #$3F
-    sta PPUADDR
-
-    lda #$00
-    sta PPUMASK
-
-    lda #$02
-
-    ; critical update time
-
-    sta PPUADDR
-    stx PPUDATA
-    ; ldx #$24      ;try to jam a second one in?
-    ; stx PPUDATA   ;taste the rainbow!
-    sty PPUADDR
-    lda #$00 ; ppuaddr restore 2
-    sta PPUADDR
-    ; critical time done
-
-    lda #BG_ON
-    sta PPUMASK
-
-    ; sta IRQ_DISABLE
-    ; rti
-    jmp irq_rts
-.endproc
-
-
-.proc irq_handlerg
-;burn until a specific column is passed
-crap:
-    jmp foo
-    jmp crap
-foo:
-.repeat 95 ;92 for 2 palettes, 
-    nop
-.endrepeat
-    
-    ; prep registers and writes
-    bit PPUSTATUS
-
-    ldx #$20 ; new palette color
-    ldy #$11 ; ppuaddr restore 1
-
-    lda #$3F
-    sta PPUADDR
-
-    lda #$00
-    sta PPUMASK
-
-    lda #$02
-
-    ; critical update time
-
-    sta PPUADDR
-    stx PPUDATA
-    ; ldx #$24      ;try to jam a second one in?
-    ; stx PPUDATA   ;taste the rainbow!
-    sty PPUADDR
-    lda #$00 ; ppuaddr restore 2
-    sta PPUADDR
-    ; critical time done
-
-    lda #BG_ON
-    sta PPUMASK
-
-    sta IRQ_DISABLE
-    rti
-.endproc
-
