@@ -133,7 +133,7 @@ load_first_irq:
     sta irq_save_a
     stx irq_save_x
     sty irq_save_y
-    
+
     sta IRQ_DISABLE
 
     ; set the next IRQ_LATCH now
@@ -141,10 +141,26 @@ load_first_irq:
     inx
     lda irq_table_scanline,X
     sta IRQ_LATCH
+    sta IRQ_RELOAD
 
     jmp (irq_next_address)
     ; jmp irq_handlerj
 irq_rts:
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; lda irq_save_a
+    ; sta IRQ_ENABLE
     rti
 
     ; advance the index, load the next scanline
@@ -169,7 +185,6 @@ irq_rts:
     lda irq_table_address+1,X
     sta irq_next_address+1
 
-    sta IRQ_ENABLE
 irq_handler_end:
     lda irq_save_a
     ldx irq_save_x

@@ -109,7 +109,7 @@ foo1:
     jmp foo2
     jmp foo1
 foo2:
-.repeat 77
+.repeat 75
     nop
 .endrepeat
     bit PPUSTATUS
@@ -137,6 +137,9 @@ foo2:
     sta PPUMASK
 
     ; sta IRQ_DISABLE
+    ; .repeat 10
+    ; nop
+    ; .endrepeat
 ; rti
     jmp irq_rts
 .endproc
