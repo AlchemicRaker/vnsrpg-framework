@@ -101,43 +101,6 @@ demo_scene_main_point:
     rts
 .endproc
 
-.proc demo_scene_irq2
-;burn until a specific column is passed
-.repeat 79 ;92 for 2 palettes, 
-    nop
-.endrepeat
-    
-    ; prep registers and writes
-    bit PPUSTATUS
-
-    ldx #$20 ; new palette color
-    ldy #$11 ; ppuaddr restore 1
-
-    lda #$3F
-    sta PPUADDR
-
-    lda #$00
-    sta PPUMASK
-
-    lda #$02
-
-    ; critical update time
-
-    sta PPUADDR
-    stx PPUDATA
-    ; ldx #$24      ;try to jam a second one in?
-    ; stx PPUDATA   ;taste the rainbow!
-    sty PPUADDR
-    lda #$00 ; ppuaddr restore 2
-    sta PPUADDR
-    ; critical time done
-
-    lda #BG_ON
-    sta PPUMASK
-
-    jmp irq_rts
-.endproc
-
 .proc demo_scene_irq
 ;burn until a specific column is passed
 
@@ -151,7 +114,7 @@ demo_scene_main_point:
     ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
     ldyppuaddr1 $00, $41, $0
 
-    ldst #$3E, PPUADDR ; palette index write 1
+    ldst #$3F, PPUADDR ; palette index write 1
 
     ldst #$00, PPUMASK ; rendering off
 
