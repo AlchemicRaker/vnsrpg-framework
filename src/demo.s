@@ -109,14 +109,14 @@ foo1:
     jmp foo2
     jmp foo1
 foo2:
-.repeat 75
+.repeat 72
     nop
 .endrepeat
     bit PPUSTATUS
     
     ldx #$20 ; new palette color
-    ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
-    ; ldyppuaddr1 $00, $41, $0
+    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
+    ldyppuaddr1 $00, $41, $0
 
     ldst #$3F, PPUADDR ; palette index write 1
 
@@ -128,18 +128,13 @@ foo2:
     sta PPUADDR     ; write 2
     stx PPUDATA     ; write palette
     sty PPUADDR     ; restore 1
-    lda #$00
-    ; ldappuaddr2 $00, $41, $0
+    ; lda #$00
+    ldappuaddr2 $00, $41, $0
     sta PPUADDR     ; restore 2
 
     ; critical time done
     lda #BG_ON
     sta PPUMASK
-
-    ; sta IRQ_DISABLE
-    ; .repeat 10
-    ; nop
-    ; .endrepeat
 ; rti
     jmp irq_rts
 .endproc

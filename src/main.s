@@ -142,25 +142,12 @@ load_first_irq:
     lda irq_table_scanline,X
     sta IRQ_LATCH
     sta IRQ_RELOAD
+    sta IRQ_ENABLE
+
+
 
     jmp (irq_next_address)
-    ; jmp irq_handlerj
-irq_rts:
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; lda irq_save_a
-    ; sta IRQ_ENABLE
+    ; this target nees to rti on its own
     rti
 
     ; advance the index, load the next scanline
@@ -185,6 +172,7 @@ irq_rts:
     lda irq_table_address+1,X
     sta irq_next_address+1
 
+irq_rts:
 irq_handler_end:
     lda irq_save_a
     ldx irq_save_x
