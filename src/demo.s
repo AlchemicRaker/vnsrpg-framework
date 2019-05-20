@@ -1,6 +1,6 @@
 .include "global.inc"
 
-.export demo_scene_load_point
+.export demo_scene_load_point, demo_scene_irq
 .import scene_irq, scene_nmi
 
 .import irq_table_scanline, irq_next_index, irq_next_scanline, irq_table_address, irq_rts
@@ -105,14 +105,18 @@ demo_scene_main_point:
 ;burn until a specific column is passed
 
     ; prep registers and writes
-.repeat 79
+foo1:
+    jmp foo2
+    jmp foo1
+foo2:
+.repeat 77
     nop
 .endrepeat
     bit PPUSTATUS
     
     ldx #$20 ; new palette color
-    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
-    ldyppuaddr1 $00, $41, $0
+    ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
+    ; ldyppuaddr1 $00, $41, $0
 
     ldst #$3F, PPUADDR ; palette index write 1
 
@@ -124,13 +128,15 @@ demo_scene_main_point:
     sta PPUADDR     ; write 2
     stx PPUDATA     ; write palette
     sty PPUADDR     ; restore 1
-    ; lda #$00
-    ldappuaddr2 $00, $41, $0
+    lda #$00
+    ; ldappuaddr2 $00, $41, $0
     sta PPUADDR     ; restore 2
 
     ; critical time done
     lda #BG_ON
     sta PPUMASK
 
+    ; sta IRQ_DISABLE
+; rti
     jmp irq_rts
 .endproc
