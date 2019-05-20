@@ -2,12 +2,14 @@
 
 .export main, nmi_handler, irq_handler, next_scene_bank, next_scene_point, scene_nmi, scene_irq
 .import sample_ppu, demo_scene_load_point, demo_scene_irq
-.export irq_table_address, irq_table_scanline, irq_next_index, irq_next_scanline
+.export irq_table_address, irq_next_index, irq_next_scanline
+.exportzp irq_table_scanline
 
 .segment "ZEROPAGE"
 
 frame_counter: .res 1
 irq_next_address: .res 2
+irq_table_scanline: .res 8 ; works with irq_table_address; with with an $FF
 
 .segment "RAM"
 next_scene_bank: .res 2
@@ -26,7 +28,6 @@ irq_next_index: .res 1 ; index of the table coming up/currently
 irq_next_scanline: .res 1 ; track the coming up/current scanline
 
 irq_table_address: .res 16 ; 8 addresses
-irq_table_scanline: .res 8 ; works with irq_table_address; with with an $FF
 
 irq_save_a: .res 1
 irq_save_x: .res 1

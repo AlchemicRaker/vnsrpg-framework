@@ -3,7 +3,8 @@
 .export demo_scene_load_point, demo_scene_irq
 .import scene_irq, scene_nmi
 
-.import irq_table_scanline, irq_next_index, irq_next_scanline, irq_table_address, irq_rts
+.import irq_next_index, irq_next_scanline, irq_table_address, irq_rts
+.importzp irq_table_scanline
 
 
 .segment "INITBANK"
@@ -105,11 +106,11 @@ demo_scene_main_point:
 ;burn until a specific column is passed
 
     ; prep registers and writes
-foo1:
-    jmp foo2
-    jmp foo1
-foo2:
-.repeat 72
+; foo1:
+;     jmp foo2
+;     jmp foo1
+; foo2:
+.repeat 74
     nop
 .endrepeat
     bit PPUSTATUS
