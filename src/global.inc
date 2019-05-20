@@ -32,6 +32,7 @@ IRQ_ENABLE = $E001  ; enable
 PPUCTRL = $2000
 PPUCTRL_OBJ_1000 = $08
 PPUCTRL_NMI = $80
+PPUCTRL_VERTICAL = $04
 
 PPUSTATUS = $2002
 OAMADDR = $2003
@@ -87,8 +88,12 @@ INPUT_RIGHT  = %00000001
     ldy #(((full_y & %00000111) << 4) | (nt << 2) | ((full_y & %11000000) >> 6))
 .endmacro
 
+.macro ldappuaddr2 full_x, full_y, nt
+    lda #(((full_y & %00111100) << 2) | (full_x >> 3))
+.endmacro
+
 .macro ldyppuaddr2 full_x, full_y, nt
-    ldy #(((full_y & %00111000) << 2) | (full_x >> 3))
+    ldy #(((full_y & %00111100) << 2) | (full_x >> 3))
 .endmacro
 
 .macro ldstword addr, target, target2

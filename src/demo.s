@@ -65,7 +65,7 @@ set_sample_palette:
 
     ; build an irq table
     ldstword demo_scene_irq, irq_table_address
-    ldst #$3E, irq_table_scanline
+    ldst #$3F, irq_table_scanline
     ldst #$FF, irq_table_scanline+1 ;stub the end with FF
 
 
@@ -101,36 +101,71 @@ demo_scene_main_point:
     rts
 .endproc
 
+.proc demo_scene_irq2
+;burn until a specific column is passed
+.repeat 79 ;92 for 2 palettes, 
+    nop
+.endrepeat
+    
+    ; prep registers and writes
+    bit PPUSTATUS
+
+    ldx #$20 ; new palette color
+    ldy #$11 ; ppuaddr restore 1
+
+    lda #$3F
+    sta PPUADDR
+
+    lda #$00
+    sta PPUMASK
+
+    lda #$02
+
+    ; critical update time
+
+    sta PPUADDR
+    stx PPUDATA
+    ; ldx #$24      ;try to jam a second one in?
+    ; stx PPUDATA   ;taste the rainbow!
+    sty PPUADDR
+    lda #$00 ; ppuaddr restore 2
+    sta PPUADDR
+    ; critical time done
+
+    lda #BG_ON
+    sta PPUMASK
+
+    jmp irq_rts
+.endproc
+
 .proc demo_scene_irq
 ;burn until a specific column is passed
 
     ; prep registers and writes
-    bit PPUSTATUS
 .repeat 79
     nop
 .endrepeat
+    bit PPUSTATUS
     
-
     ldx #$20 ; new palette color
+    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
+    ldyppuaddr1 $00, $41, $0
 
-    ldyppuaddr1 $00, $40, $0 ; prep restore 1
+    ldst #$3E, PPUADDR ; palette index write 1
 
-    ldst #$3F, PPUADDR ; palette index write 1
+    ldst #$00, PPUMASK ; rendering off
 
-    ldst #$00, PPUMASK ; disable rendering
-
-    lda #$02 ; palette color index
+    lda #$02
 
     ; critical update time
-
-    sta PPUADDR     ; palette index write 2
-    stx PPUDATA     ; write palette 
-
+    sta PPUADDR     ; write 2
+    stx PPUDATA     ; write palette
     sty PPUADDR     ; restore 1
-    ldyppuaddr2 $00, $40, $0
-    sty PPUADDR     ; restore 2
-    ; critical time done
+    ; lda #$00
+    ldappuaddr2 $00, $41, $0
+    sta PPUADDR     ; restore 2
 
+    ; critical time done
     lda #BG_ON
     sta PPUMASK
 
