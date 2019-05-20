@@ -1,11 +1,13 @@
 .include "global.inc"
 
-.export main, nmi_handler, irq_handler
+.export main, nmi_handler, irq_handler, next_scene_bank, next_scene_point, scene_nmi, scene_irq
 .import sample_ppu, demo_scene_load_point
+.export irq_table_address, irq_table_scanline, irq_next_index, irq_next_scanline
 
 .segment "ZEROPAGE"
 
 frame_counter: .res 1
+irq_next_address: .res 2
 
 .segment "RAM"
 next_scene_bank: .res 2
@@ -16,6 +18,19 @@ dummy: .res 2
 nmi_save_a: .res 1
 nmi_save_x: .res 1
 nmi_save_y: .res 1
+
+scene_nmi: .res 2
+
+scene_irq: .res 2
+irq_next_index: .res 1 ; index of the table coming up/currently
+irq_next_scanline: .res 1 ; track the coming up/current scanline
+
+irq_table_address: .res 16 ; 8 addresses
+irq_table_scanline: .res 8 ; works with irq_table_address; with with an $FF
+
+irq_save_a: .res 1
+irq_save_x: .res 1
+irq_save_y: .res 1
 
 .segment "INITBANK2"
 .proc bank_switch_far_call_test
@@ -69,35 +84,34 @@ main_enter_prg1:
 .endproc
 
 .proc nmi_handler ; vblank
+    ; nmi_handlers should be in static code, so we don't waste any time bank switching
+
     ; save registers
     sta nmi_save_a
     stx nmi_save_x
     sty nmi_save_y
-    ; jsr to scene nmi handler/table
 
+    mjsr (scene_nmi)
+
+load_first_irq:
     sta IRQ_DISABLE
-    lda #$3F      ; scanline 68 (halfway through row 9)
+
+    ldstx #$00, irq_next_index
+
+    ldst irq_table_address, irq_next_address
+    ldst irq_table_address+1, irq_next_address+1
+    
+    lda irq_table_scanline ; usually offset by irq_next_index but not for first one
     sta IRQ_LATCH
     sta IRQ_RELOAD
     sta IRQ_ENABLE
-    ; reset the palette
 
-    bit PPUSTATUS
-    lda #$3F
-    sta PPUADDR
-    lda #$00
-    sta PPUADDR
-    lda #$0F
-    sta PPUDATA
-    lda #$16
-    sta PPUDATA
-    lda #$12
-    sta PPUDATA
-    lda #$1a
-    sta PPUDATA
+    sta irq_next_scanline ; first scanline's value is the next scanline
 
-    ldst #>$0000, PPUADDR
-    ldst #<$0000, PPUADDR
+    ; set the latch for the next hblank
+    ; lda irq_table_scanline+1 
+    ; sta IRQ_LATCH
+
 
     ldst #$01, post_nmi_flag
     ; restore registers
@@ -113,40 +127,50 @@ main_enter_prg1:
 ;a separate bank with offset UI tiles can be used to draw the bottom half of the row
 ;bank switch *before* the hblank it becomes necessary
 ;back switch back before the next row of tiles, somehow.
-
 .proc irq_handler
-;burn until a specific column is passed
-.repeat 95 ;92 for 2 palettes, 
-    nop
-.endrepeat
-    
-    ; prep registers and writes
-    bit PPUSTATUS
+.export irq_rts
 
-    ldx #$20 ; new palette color
+    sta irq_save_a
+    stx irq_save_x
+    sty irq_save_y
 
-    ldyppuaddr1 $00, $40, $0 ; prep restore 1
+    ; set the next IRQ_LATCH now
+    ldx irq_next_index
+    inx
+    lda irq_table_scanline,X
+    sta IRQ_LATCH
 
-    ldst #$3F, PPUADDR ; write 1
-
-    ldst #$00, PPUMASK ; disable rendering
-
-    lda #$02 ; palette color index
-
-    ; critical update time
-
-    sta PPUADDR
-    stx PPUDATA
-    ; ldx #$24      ;try to jam a second one in?
-    ; stx PPUDATA   ;taste the rainbow!
-    sty PPUADDR     ; restore 1
-    ldyppuaddr2 $00, $40, $0
-    sty PPUADDR     ; restore 2
-    ; critical time done
-
-    lda #BG_ON
-    sta PPUMASK
-
+    jmp (irq_next_address)
+irq_rts:
     sta IRQ_DISABLE
+
+    ; advance the index, load the next scanline
+    ; if the scanline isn't $FF, prepare for another handler, otherwise disable IRQ
+    lda irq_next_scanline
+    ldx irq_next_index
+    inx
+    clc
+    adc irq_table_scanline,X
+    bcs irq_handler_end
+
+    ; store the new values
+    sta irq_next_scanline
+    stx irq_next_index 
+
+    ; irq_next_address = irq_table_address[irq_next_index*2]
+    txa
+    asl A
+    tax
+    lda irq_table_address,X
+    sta irq_next_address
+    lda irq_table_address+1,X
+    sta irq_next_address+1
+
+    sta IRQ_ENABLE
+irq_handler_end:
+    lda irq_save_a
+    ldx irq_save_x
+    ldy irq_save_y
     rti
 .endproc
+

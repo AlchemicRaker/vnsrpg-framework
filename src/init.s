@@ -7,10 +7,18 @@
 
 .segment "MMC3_INIT"
 .proc mmc3_init
-    sei                 ; Disable interrupts
+    ; Disable interrupts
+    sei
     ; Using a far jump preps the 16KB static bank
     ; And also tucks the init code into a bank
-    fjmp reset_handler
+
+    ; avoiding macros to guarantee this won't randomly break,
+    ; but this is equivalent to `fjmp reset_handler`
+    lda #<.bank(reset_handler) | MMC3SELECT_DEFAULTS
+    sta MMC3SELECT
+    lda #>.bank(reset_handler)
+    sta MMC3DATA
+    jmp reset_handler
 .endproc
 
 .segment "INITBANK"

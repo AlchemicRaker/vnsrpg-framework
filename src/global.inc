@@ -15,6 +15,7 @@ MMC3SELECT_PRG0 = $6
 MMC3SELECT_PRG1 = $7
 MMC3SELECT_STATIC = %01000000
 MMC3SELECT_CHR_INVERSION = %10000000
+MMC3SELECT_DEFAULTS = MMC3SELECT_CHR_INVERSION
 
 MMC3DATA = $8001
 
@@ -99,10 +100,15 @@ INPUT_RIGHT  = %00000001
 .endif
 .endmacro
 
+.macro ldstmmc3ctrl bank_code
+    ldst #<bank_code | MMC3SELECT_DEFAULTS, MMC3SELECT
+    ldst #>bank_code, MMC3DATA
+.endmacro
+
 ; BANK macros
 
 .macro fjmp target
-    ldstword .bank(target), MMC3SELECT, MMC3DATA
+    ldstmmc3ctrl .bank(target)
     jmp target
 .endmacro
 
