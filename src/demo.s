@@ -22,7 +22,7 @@ demo_scene_load_point:
 @loop_row:
     ldx #$00        ; x
     tya             ; tile to display, offset it each row
-    adc #$00
+    adc #$02
 
 @loop_column:
     and #$03        ; clamp tile
@@ -125,7 +125,7 @@ demo_scene_main_point:
 ;     jmp foo2
 ;     jmp foo1
 ; foo2:
-.repeat 69 ; lots of 2-cycle delays
+.repeat 68 ; lots of 2-cycle delays
     nop
 .endrepeat
     bit PPUSTATUS
@@ -138,7 +138,7 @@ demo_scene_main_point:
     ; ldst #$08, PPUSCROLL
     
     ldx #new_color ; new palette color
-    ldyppuaddr1 $00, y_value, $0
+    ldyppuaddr1 $10, y_value, $0
 
     ldst #$3F, PPUADDR ; palette index write 1
 
@@ -149,20 +149,26 @@ demo_scene_main_point:
     ; critical update time
     sta PPUADDR     ; write 2
     stx PPUDATA     ; write palette
+    ldx #new_color+1
     stx PPUDATA     ; write palette
     sty PPUADDR     ; restore 1
-    ldappuaddr2 $00 , y_value, $0
+    ldappuaddr2 $10 , y_value, $0
     sta PPUADDR     ; restore 2
 
     ; critical time done
     lda #BG_ON
     sta PPUMASK
+
+    ldst #$00, PPUSCROLL
+    ldst #$00, PPUSCROLL
+
+    ; fix scroll for the next scanline?
     jmp irq_rts
 .endscope
 .endmacro
 
 .proc demo_scene_irq1
-    color_change_irq $02, $2C, $40
+    color_change_irq $01, $2C, $40
 .endproc
 
 .proc demo_scene_irq2
@@ -170,7 +176,7 @@ demo_scene_main_point:
 .endproc
 
 .proc demo_scene_irq3
-    color_change_irq $01, $20, $C0
+    color_change_irq $02, $20, $C0
 .endproc
 
 .proc demo_scene_irq4
