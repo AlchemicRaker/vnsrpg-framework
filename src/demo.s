@@ -22,6 +22,7 @@ demo_scene_load_point:
 @loop_row:
     ldx #$00        ; x
     tya             ; tile to display, offset it each row
+    adc #$00
 
 @loop_column:
     and #$03        ; clamp tile
@@ -74,7 +75,10 @@ set_sample_palette:
     ldstword demo_scene_irq3, irq_table_address+4
     ldst #$3F, irq_table_scanline+2
 
-    ldst #$FF, irq_table_scanline+3 ;stub the end with FF
+    ldstword demo_scene_irq4, irq_table_address+6
+    ldst #$1F, irq_table_scanline+3
+
+    ldst #$FF, irq_table_scanline+4 ;stub the end with FF
 
 
     rts
@@ -103,122 +107,72 @@ demo_scene_main_point:
     lda #$1a
     sta PPUDATA
 
+    ; necessary??
     ldst #>$0000, PPUADDR
     ldst #<$0000, PPUADDR
+    ; ldst #($F8), PPUSCROLL
+    ; ldst #$00, PPUSCROLL
 
     rts
 .endproc
 
-.proc demo_scene_irq1
+.macro color_change_irq palette_index, new_color, y_value
+.scope
 ;burn until a specific column is passed
 
-    ; prep registers and writes
-foo1:
-    jmp foo2
-    jmp foo1
-foo2:
-.repeat 72
+    ; this adds a 3-cycle delay
+; foo1:
+;     jmp foo2
+;     jmp foo1
+; foo2:
+.repeat 69 ; lots of 2-cycle delays
     nop
 .endrepeat
     bit PPUSTATUS
+
+
+    .repeat 6 ;equivalent to setting PPUSCROLL twice
+    nop
+    .endrepeat
+    ; ldst #$10, PPUSCROLL
+    ; ldst #$08, PPUSCROLL
     
-    ldx #$26 ; new palette color
-    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
-    ldyppuaddr1 $00, $40, $0
+    ldx #new_color ; new palette color
+    ldyppuaddr1 $00, y_value, $0
 
     ldst #$3F, PPUADDR ; palette index write 1
 
     ldst #$00, PPUMASK ; rendering off
 
-    lda #$02
+    lda #palette_index
 
     ; critical update time
     sta PPUADDR     ; write 2
     stx PPUDATA     ; write palette
+    stx PPUDATA     ; write palette
     sty PPUADDR     ; restore 1
-    ; lda #$00
-    ldappuaddr2 $00, $40, $0
+    ldappuaddr2 $00 , y_value, $0
     sta PPUADDR     ; restore 2
 
     ; critical time done
     lda #BG_ON
     sta PPUMASK
-; rti
     jmp irq_rts
+.endscope
+.endmacro
+
+.proc demo_scene_irq1
+    color_change_irq $02, $2C, $40
 .endproc
 
 .proc demo_scene_irq2
-;burn until a specific column is passed
-
-    ; prep registers and writes
-foo1:
-    jmp foo2
-    jmp foo1
-foo2:
-.repeat 72
-    nop
-.endrepeat
-    bit PPUSTATUS
-    
-    ldx #$12 ; new palette color
-    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
-    ldyppuaddr1 $00, $80, $0
-
-    ldst #$3F, PPUADDR ; palette index write 1
-
-    ldst #$00, PPUMASK ; rendering off
-
-    lda #$03
-
-    ; critical update time
-    sta PPUADDR     ; write 2
-    stx PPUDATA     ; write palette
-    sty PPUADDR     ; restore 1
-    ; lda #$00
-    ldappuaddr2 $00, $80, $0
-    sta PPUADDR     ; restore 2
-
-    ; critical time done
-    lda #BG_ON
-    sta PPUMASK
-; rti
-    jmp irq_rts
+    color_change_irq $01, $13, $80
 .endproc
 
 .proc demo_scene_irq3
-;burn until a specific column is passed
+    color_change_irq $01, $20, $C0
+.endproc
 
-    ; prep registers and writes
-foo1:
-    jmp foo2
-    jmp foo1
-foo2:
-.repeat 72
-    nop
-.endrepeat
-    bit PPUSTATUS
-    
-    ldx #$1A ; new palette color
-    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
-    ldyppuaddr1 $00, $120, $0
-
-    ldst #$3F, PPUADDR ; palette index write 1
-
-    ldst #$00, PPUMASK ; rendering off
-
-    lda #$01
-
-    ; critical update time
-    sta PPUADDR     ; write 2
-    stx PPUDATA     ; write palette
-    sty PPUADDR     ; restore 1
-    ; lda #$00
-    ldappuaddr2 $00, $120, $0
-    sta PPUADDR     ; restore 2
-
-    ; critical time done
-    lda #BG_ON
-    sta PPUMASK
-; rti
-    jmp irq_rts
+.proc demo_scene_irq4
+    color_change_irq $02, $06, $E0
 .endproc
