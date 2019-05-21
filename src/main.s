@@ -2,14 +2,15 @@
 
 .export main, nmi_handler, irq_handler, next_scene_bank, next_scene_point, scene_nmi, scene_irq
 .import sample_ppu, demo_scene_load_point, demo_scene_irq
-.export irq_next_index, irq_next_scanline, irq_table_address
-.exportzp irq_table_scanline
+.export irq_next_scanline, irq_table_address
+.exportzp irq_table_scanline, irq_next_index
 
 .segment "ZEROPAGE"
 
 frame_counter: .res 1
 irq_next_address: .res 2
 irq_table_scanline: .res 8 ; works with irq_table_address; with with an $FF
+irq_next_index: .res 1 ; index of the table coming up/currently
 
 .segment "RAM"
 irq_table_address: .res 16 ; 8 addresses
@@ -25,13 +26,15 @@ nmi_save_y: .res 1
 scene_nmi: .res 2
 
 scene_irq: .res 2
-irq_next_index: .res 1 ; index of the table coming up/currently
 irq_next_scanline: .res 1 ; track the coming up/current scanline
 
 
 irq_save_a: .res 1
 irq_save_x: .res 1
 irq_save_y: .res 1
+
+main_loop_ram: .res 1
+main_loop_address: .res 2
 
 .segment "INITBANK2"
 .proc bank_switch_far_call_test
@@ -45,14 +48,26 @@ irq_save_y: .res 1
     ldstword .bank(demo_scene_load_point), next_scene_bank
     ldstword demo_scene_load_point, next_scene_point
 
+    ;put the main loop into RAM
+
+    ldst #$4C, main_loop_ram ; copy the JMP command into place 
+    
     jmp main_enter_scene
 
 main_loop_enter:
-    ldst #$00, post_nmi_flag
+    ldstword main_loop_ram, main_loop_address ; modify the JMP command
+
 main_loop:
-    lda post_nmi_flag
-    cmp #$00
-    beq main_loop ; loop until post_nmi_flag is set
+    jmp main_loop_ram
+    
+main_loop_def:
+    jmp main_loop_def
+    ; jmp (main_address)
+    ; lda post_nmi_flag
+    ; cmp #$00
+    ; beq main_loop ; loop until post_nmi_flag is set
+
+.export main_enter_scene
 main_enter_scene:
     lda next_scene_bank
     cmp #$06
@@ -114,7 +129,10 @@ load_first_irq:
     ; sta IRQ_LATCH
 
 
-    ldst #$01, post_nmi_flag
+    ; ldst #$01, post_nmi_flag
+.import main_enter_scene
+    ldstword main_enter_scene, main_loop_address
+
     ; restore registers
     lda nmi_save_a
     ldx nmi_save_x

@@ -1,10 +1,10 @@
 .include "global.inc"
 
-.export demo_scene_load_point, demo_scene_irq
+.export demo_scene_load_point
 .import scene_irq, scene_nmi
 
-.import irq_next_index, irq_next_scanline, irq_rts, irq_table_address
-.importzp irq_table_scanline
+.import irq_next_scanline, irq_rts, irq_table_address
+.importzp irq_table_scanline, irq_next_index
 
 
 .segment "INITBANK"
@@ -65,9 +65,16 @@ set_sample_palette:
     ; ldstword demo_scene_irq, scene_irq
 
     ; build an irq table
-    ldstword demo_scene_irq, irq_table_address
-    ldst #$3F, irq_table_scanline
-    ldst #$FF, irq_table_scanline+1 ;stub the end with FF
+    ldstword demo_scene_irq1, irq_table_address
+    ldst #$3E, irq_table_scanline               ;-1 for first irq timinig
+
+    ldstword demo_scene_irq2, irq_table_address+2
+    ldst #$3F, irq_table_scanline+1
+
+    ldstword demo_scene_irq3, irq_table_address+4
+    ldst #$3F, irq_table_scanline+2
+
+    ldst #$FF, irq_table_scanline+3 ;stub the end with FF
 
 
     rts
@@ -89,7 +96,7 @@ demo_scene_main_point:
     sta PPUADDR
     lda #$0F
     sta PPUDATA
-    lda #$16
+    lda #$26
     sta PPUDATA
     lda #$12
     sta PPUDATA
@@ -102,22 +109,22 @@ demo_scene_main_point:
     rts
 .endproc
 
-.proc demo_scene_irq
+.proc demo_scene_irq1
 ;burn until a specific column is passed
 
     ; prep registers and writes
-; foo1:
-;     jmp foo2
-;     jmp foo1
-; foo2:
+foo1:
+    jmp foo2
+    jmp foo1
+foo2:
 .repeat 72
     nop
 .endrepeat
     bit PPUSTATUS
     
-    ldx #$20 ; new palette color
+    ldx #$26 ; new palette color
     ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
-    ldyppuaddr1 $00, $41, $0
+    ldyppuaddr1 $00, $40, $0
 
     ldst #$3F, PPUADDR ; palette index write 1
 
@@ -130,7 +137,83 @@ demo_scene_main_point:
     stx PPUDATA     ; write palette
     sty PPUADDR     ; restore 1
     ; lda #$00
-    ldappuaddr2 $00, $41, $0
+    ldappuaddr2 $00, $40, $0
+    sta PPUADDR     ; restore 2
+
+    ; critical time done
+    lda #BG_ON
+    sta PPUMASK
+; rti
+    jmp irq_rts
+.endproc
+
+.proc demo_scene_irq2
+;burn until a specific column is passed
+
+    ; prep registers and writes
+foo1:
+    jmp foo2
+    jmp foo1
+foo2:
+.repeat 72
+    nop
+.endrepeat
+    bit PPUSTATUS
+    
+    ldx #$12 ; new palette color
+    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
+    ldyppuaddr1 $00, $80, $0
+
+    ldst #$3F, PPUADDR ; palette index write 1
+
+    ldst #$00, PPUMASK ; rendering off
+
+    lda #$03
+
+    ; critical update time
+    sta PPUADDR     ; write 2
+    stx PPUDATA     ; write palette
+    sty PPUADDR     ; restore 1
+    ; lda #$00
+    ldappuaddr2 $00, $80, $0
+    sta PPUADDR     ; restore 2
+
+    ; critical time done
+    lda #BG_ON
+    sta PPUMASK
+; rti
+    jmp irq_rts
+.endproc
+
+.proc demo_scene_irq3
+;burn until a specific column is passed
+
+    ; prep registers and writes
+foo1:
+    jmp foo2
+    jmp foo1
+foo2:
+.repeat 72
+    nop
+.endrepeat
+    bit PPUSTATUS
+    
+    ldx #$1A ; new palette color
+    ; ldy #$11 ; prep restore 1 (this is terrible, but looks good during the row only!)
+    ldyppuaddr1 $00, $120, $0
+
+    ldst #$3F, PPUADDR ; palette index write 1
+
+    ldst #$00, PPUMASK ; rendering off
+
+    lda #$01
+
+    ; critical update time
+    sta PPUADDR     ; write 2
+    stx PPUDATA     ; write palette
+    sty PPUADDR     ; restore 1
+    ; lda #$00
+    ldappuaddr2 $00, $120, $0
     sta PPUADDR     ; restore 2
 
     ; critical time done
