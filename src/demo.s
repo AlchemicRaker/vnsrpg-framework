@@ -130,7 +130,7 @@ leave_it:
     sta irq_table_scanline+2
 
     ldstword demo_scene_irq2, irq_table_address+6
-    lda #($3F - $02 - $03 - $20) ;subtract 2 for 2 irqs, $3 for known gap, and anim for other gap
+    lda #($3F - $02 - $02) ;subtract 2 for 2 irqs, $3 for known gap, and anim for other gap
     clc
     adc demo_diff
     ; lda #($3F - $08 - $02)
