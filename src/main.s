@@ -58,7 +58,7 @@ main_loop_enter:
     ldstword main_loop_ram, main_loop_address ; modify the JMP command
 
 main_loop:
-    .repeat 102
+    .repeat 1
     nop
     .endrepeat
     jmp main_loop_ram
