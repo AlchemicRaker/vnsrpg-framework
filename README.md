@@ -104,4 +104,16 @@ This is not acceptable for many games, but if there is sufficient padding or use
 
 *TODO: Provide an easy way to 'soften' the CPU during an hblank, so that the jitter of the next IRQ is 0 to 3 CPU cycles max.*
 
+## Audio System
+(todo)
+
+### Audio Toolchain
+(todo)
+
+## Graphics System
+(todo)
+
+### Graphics Toolchain
+(todo)
+
 
