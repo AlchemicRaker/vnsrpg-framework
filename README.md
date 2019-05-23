@@ -104,6 +104,11 @@ This is not acceptable for many games, but if there is sufficient padding or use
 
 *TODO: Provide an easy way to 'soften' the CPU during an hblank, so that the jitter of the next IRQ is 0 to 3 CPU cycles max.*
 
+### Sprite System
+The sprite system is currently in planning.
+Current plan is to provide a table of addresses that are called every frame, for keeping sprites updated and animated.
+An incrementing register will be passed into each of these calls, so that one function may be used to drive several sprites.
+
 ## Audio System
 (todo)
 
