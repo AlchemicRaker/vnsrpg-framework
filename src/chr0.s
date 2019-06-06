@@ -5,6 +5,12 @@
 ;8 byte are the second bit of each color in an 8x8 grid
 ;1 byte is 8 bits, 1 row of a tile
 
+font:
+.incbin "font.chr"
+
+soldierswing:
+.incbin "soldierswing.chr"
+
 tile0:
     .byte   %00000000   ; first bit
     .byte   %00000000

@@ -45,30 +45,22 @@ main_loop_address: .res 2
 .proc main
     cli
 
+    ; load the address for the first scene, launch into it during the first main loop
     ldstword .bank(demo_scene_load_point), next_scene_bank
     ldstword demo_scene_load_point, next_scene_point
 
-    ;put the main loop into RAM
+    ; copy the JMP command into place 
+    ldst #$4C, main_loop_ram
 
-    ldst #$4C, main_loop_ram ; copy the JMP command into place 
-    
+    ; enter the first scene (a load script that can drive the main loop)
     jmp main_enter_scene
 
 main_loop_enter:
-    ldstword main_loop_ram, main_loop_address ; modify the JMP command
+    ; main loop should jump to itself until modified by the next NMI
+    ldstword main_loop_ram, main_loop_address
 
 main_loop:
-    .repeat 1
-    nop
-    .endrepeat
     jmp main_loop_ram
-    
-main_loop_def:
-    jmp main_loop_def
-    ; jmp (main_address)
-    ; lda post_nmi_flag
-    ; cmp #$00
-    ; beq main_loop ; loop until post_nmi_flag is set
 
 .export main_enter_scene
 main_enter_scene:
@@ -76,29 +68,24 @@ main_enter_scene:
     cmp #$06
     bne main_enter_prg1
 
-main_enter_prg0:
+.macro main_enter_prg bank_select, mmc3_value
     ; store the current bank on the stack
-    ldph bank_prg0_select
-    ldst #$06, MMC3SELECT
+    ldph bank_select
+    ldst #mmc3_value, MMC3SELECT
     
     ; set the new bank into ram and MMC3DATA
-    ldst next_scene_bank+1, bank_prg0_select, MMC3DATA
+    ldst next_scene_bank+1, bank_select, MMC3DATA
 
     mjsr (next_scene_point)
-    plst bank_prg0_select, MMC3DATA
+    plst bank_select, MMC3DATA
     jmp main_loop_enter
+.endmacro
+
+main_enter_prg0:
+    main_enter_prg bank_prg0_select, $06
 
 main_enter_prg1:
-    ; store the current bank on the stack
-    ldph bank_prg1_select
-    ldst #$07, MMC3SELECT
-    
-    ; set the new bank into ram and MMC3DATA
-    ldst next_scene_bank+1, bank_prg1_select, MMC3DATA
-
-    mjsr (next_scene_point)
-    plst bank_prg1_select, MMC3DATA
-    jmp main_loop_enter
+    main_enter_prg bank_prg1_select, $07
 
 .endproc
 

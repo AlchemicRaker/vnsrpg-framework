@@ -20,11 +20,11 @@ demo_scene_load_point:
     ldy #$00        ; y
 @loop_row:
     ldx #$00        ; x
-    tya             ; tile to display, offset it each row
-    adc #$02
+    ; tya             ; tile to display, offset it each row
+    adc #$08
 
 @loop_column:
-    and #$03        ; clamp tile
+    and #%00001111  ; clamp tile
     sta PPUDATA     ; output tile
 
     adc #$01        ; next tile
@@ -62,28 +62,9 @@ set_sample_palette:
     ldstword demo_scene_main_point, next_scene_point
 
     ldstword demo_scene_nmi, scene_nmi
-    ; ldstword demo_scene_irq, scene_irq
 
     ; build an irq table
-    ldstword demo_scene_irq1, irq_table_address
-    ldst #$3E, irq_table_scanline               ;-1 for first irq timinig
-
-    ldstword demo_scene_irq1b, irq_table_address+2
-    ldst #$05, irq_table_scanline+1
-
-    ldstword demo_scene_irq1c, irq_table_address+4
-    ldst #$03, irq_table_scanline+2
-
-    ldstword demo_scene_irq2, irq_table_address+6
-    ldst #($3F - $0A), irq_table_scanline+3
-
-    ldstword demo_scene_irq3, irq_table_address+8
-    ldst #$3F, irq_table_scanline+4
-
-    ldstword demo_scene_irq4, irq_table_address+10
-    ldst #$1F, irq_table_scanline+5
-
-    ldst #$FF, irq_table_scanline+6 ;stub the end with FF
+    ldst #$FF, irq_table_scanline
 
     ldst #$00, demo_animation
 
@@ -130,20 +111,10 @@ leave_it:
     sta irq_table_scanline+2
 
     ldstword demo_scene_irq2, irq_table_address+6
-    lda #($3F - $02 - $02 - $20) ;subtract 2 for 2 irqs, $3 for known gap, and anim for other gap
+    lda #($3F - $02 - $02 - $20)
     clc
     adc demo_diff
-    ; lda #($3F - $08 - $02)
-    sta irq_table_scanline+3    
-
-    ; ldstword demo_scene_irq1b, irq_table_address+2
-    ; ldst #$05, irq_table_scanline+1
-
-    ; ldstword demo_scene_irq1c, irq_table_address+4
-    ; ldst #$03, irq_table_scanline+2
-
-    ; ldstword demo_scene_irq2, irq_table_address+6
-    ; ldst #($3F - $0A), irq_table_scanline+3
+    sta irq_table_scanline+3
 
     ldstword demo_scene_irq3, irq_table_address+8
     ldst #$3F, irq_table_scanline+4
@@ -151,7 +122,7 @@ leave_it:
     ldstword demo_scene_irq4, irq_table_address+10
     ldst #$1F, irq_table_scanline+5
 
-    ldst #$FF, irq_table_scanline+6 ;stub the end with FF
+    ldst #$FF, irq_table_scanline+6 ; stub the end with FF
 
     rts
 
@@ -166,33 +137,28 @@ leave_it:
     sta PPUADDR
     lda #$00
     sta PPUADDR
-    lda #$0F
+
+    ; 3F,20,01,2C soldier colors
+    lda #$3F
     sta PPUDATA
-    lda #$26
+    lda #$20
     sta PPUDATA
-    lda #$12
+    lda #$01
     sta PPUDATA
-    lda #$1a
+    lda #$2c
     sta PPUDATA
 
     ; necessary??
     ldst #>$0000, PPUADDR
     ldst #<$0000, PPUADDR
-    ; ldst #($F8), PPUSCROLL
-    ; ldst #$00, PPUSCROLL
 
     rts
 .endproc
 
 .macro color_change_irq y_value, palette_index, new_color, new_color_2
 .scope
-;burn until a specific column is passed
+    ;burn until a specific column is passed
 
-    ; this adds a 3-cycle delay
-; foo1:
-;     jmp foo2
-;     jmp foo1
-; foo2:
 .repeat 68 ; lots of 2-cycle delays
     nop
 .endrepeat
@@ -213,6 +179,7 @@ foo2:
 .endif
     
     ldx #new_color ; new palette color
+    ; starting x should be +16 pixels for 2-color updates
 .ifblank new_color_2
     ldyppuaddr1 $00, y_value, $0
 .else
@@ -221,23 +188,26 @@ foo2:
 
     ldst #$3F, PPUADDR ; palette index write 1
 
+    ; critical update time
     ldst #$00, PPUMASK ; rendering off
 
     lda #palette_index
 
-    ; critical update time
     sta PPUADDR     ; write 2
     stx PPUDATA     ; write palette
 .ifnblank new_color_2
     ldx #new_color_2
     stx PPUDATA     ; write palette
 .endif
-    sty PPUADDR     ; restore 1
+
+
 .ifblank new_color_2
     ldappuaddr2 $00 , y_value, $0
 .else
     ldappuaddr2 $10 , y_value, $0
 .endif
+
+    sty PPUADDR     ; restore 1
     sta PPUADDR     ; restore 2
 
     ; critical time done

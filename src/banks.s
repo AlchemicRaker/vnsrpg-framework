@@ -14,39 +14,29 @@ bank_prg1_select: .res 1
     jmp (bank_jump_target)
 .endproc
 
-.proc bank_call_launchpoint_prg0
+.macro bank_call_launchpoint bank_select, mmc3_value
     ; store the current bank on the stack
-    ldph bank_prg0_select
-    ldst #$06 | MMC3SELECT_DEFAULTS, MMC3SELECT
+    ldph bank_select
+    ldst #mmc3_value | MMC3SELECT_DEFAULTS, MMC3SELECT
     
     ; set the new bank into ram
     ; select the new bank in MMC3DATA
-    ldst bank_jump_bank+1, bank_prg0_select, MMC3DATA          
+    ldst bank_jump_bank+1, bank_select, MMC3DATA          
 
     mjsr (bank_jump_target)
 
-    ldst #$06 | MMC3SELECT_DEFAULTS, MMC3SELECT
+    ldst #mmc3_value | MMC3SELECT_DEFAULTS, MMC3SELECT
     ; pop the previous bank from the stack
     ; put it into RAM and MMC3DATA
-    plst bank_prg0_select, MMC3DATA
+    plst bank_select, MMC3DATA
     rts
+.endmacro
+
+.proc bank_call_launchpoint_prg0
+    bank_call_launchpoint bank_prg0_select, $06
 .endproc
 
 
 .proc bank_call_launchpoint_prg1
-    ; store the current bank on the stack
-    ldph bank_prg1_select
-    ldst #$07 | MMC3SELECT_DEFAULTS, MMC3SELECT
-    
-    ; set the new bank into ram
-    ; select the new bank in MMC3DATA
-    ldst bank_jump_bank+1, bank_prg1_select, MMC3DATA          
-
-    mjsr (bank_jump_target)
-
-    ldst #$07 | MMC3SELECT_DEFAULTS, MMC3SELECT
-    ; pop the previous bank from the stack
-    ; put it into RAM and MMC3DATA
-    plst bank_prg1_select, MMC3DATA
-    rts
+    bank_call_launchpoint bank_prg1_select, $07
 .endproc
