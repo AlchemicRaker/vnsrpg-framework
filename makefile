@@ -2,7 +2,7 @@
 
 TITLE = vnsrpg
 
-ASMLIST = txrom main chr0 interrupts init banks demo
+ASMLIST = txrom main chr0 interrupts init banks demo demo_text
 CHRLIST = font
 INCLIST = global
 MAPCFG = txrom.cfg

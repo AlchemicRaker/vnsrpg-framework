@@ -1,7 +1,7 @@
 .include "global.inc"
 
 .export main, nmi_handler, irq_handler, next_scene_bank, next_scene_point, scene_nmi, scene_irq
-.import sample_ppu, demo_scene_load_point, demo_scene_irq
+.import demo_text_scene_load_point
 .export irq_next_scanline, irq_table_address
 .exportzp irq_table_scanline, irq_next_index
 
@@ -46,8 +46,8 @@ main_loop_address: .res 2
     cli
 
     ; load the address for the first scene, launch into it during the first main loop
-    ldstword .bank(demo_scene_load_point), next_scene_bank
-    ldstword demo_scene_load_point, next_scene_point
+    ldstword .bank(demo_text_scene_load_point), next_scene_bank
+    ldstword demo_text_scene_load_point, next_scene_point
 
     ; copy the JMP command into place 
     ldst #$4C, main_loop_ram
